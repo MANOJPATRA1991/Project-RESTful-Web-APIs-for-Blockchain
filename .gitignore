@@ -1,0 +1,4 @@
+node_modules/
+chaindata/
+package-lock.json
+
