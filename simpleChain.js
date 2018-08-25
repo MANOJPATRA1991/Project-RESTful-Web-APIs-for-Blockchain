@@ -9,7 +9,7 @@ class LevelSandbox {
   
   getAllBlockHash() {
   	let self = this;
-    let i = 0;
+    let i = -1;
     return new Promise(function(resolve, reject) {
       self.db.createKeyStream()
       .on('data', function(data) {
@@ -61,7 +61,7 @@ class Blockchain{
 
   async checkHeightOfChain() {
     let height = await this.getBlockHeight();
-    if (height === 0) {
+    if (height === -1) {
       this.addBlock(new Block("First block in the chain - Genesis block"));
     }
   }
@@ -75,8 +75,8 @@ class Blockchain{
     // UTC timestamp
     newBlock.time = new Date().getTime().toString().slice(0,-3);
     // previous block hash
-    if(newBlock.height > 1) {
-      let prevHash = this.getBlock(newBlock.height-1).hash;
+    if(newBlock.height > 0) {
+      let prevHash = (await this.getBlock(newBlock.height-1)).hash;
       newBlock.previousBlockHash = prevHash;
     } else {
       newBlock.previousBlockHash = 0;
@@ -87,13 +87,14 @@ class Blockchain{
     
 
     // Adding block object to chain
-    this.chain.addLevelDBData(newBlock.height, JSON.stringify(newBlock).toString());
+    this.chain.addLevelDBData(newBlock.height, JSON.stringify(newBlock));
   }
 
   // Get block height
   async getBlockHeight(){
   	try {
-  		let data = await this.chain.getAllBlockHash();
+      let data = await this.chain.getAllBlockHash();
+      console.log(data);
   		return data;
 	} catch (err) {
         throw TypeError("An error occured");
@@ -104,20 +105,19 @@ class Blockchain{
     async getBlock(blockHeight){
       // return object as a single string
       let block = await this.chain.getLevelDBData(blockHeight);
-      return JSON.parse(JSON.stringify(block));
+      return JSON.parse(block);
     }
 
     // validate block
     async validateBlock(blockHeight){
       // get block object
       let block = await this.getBlock(blockHeight);
-      let parsedBlock = JSON.parse(block);
       // get block hash
-      let blockHash = parsedBlock.hash;
+      let blockHash = block.hash;
       // remove block hash to test block integrity
-      parsedBlock.hash = '';
+      block.hash = '';
       // generate block hash
-      let validBlockHash = SHA256(JSON.stringify(parsedBlock)).toString();
+      let validBlockHash = SHA256(JSON.stringify(block)).toString();
       // Compare
       if (blockHash===validBlockHash) {
           return true;
@@ -128,14 +128,14 @@ class Blockchain{
     }
 
     // Validate blockchain
-    validateChain(){
+    async validateChain(){
       let errorLog = [];
-      for (let i = 1; i < this.getBlockHeight(); i++) {
+      for (let i = 0; i < this.getBlockHeight(); i++) {
         // validate block
-        if (!this.validateBlock(i)) errorLog.push(i);
+        if (!(await this.validateBlock(i))) errorLog.push(i);
         // compare blocks hash link
-        let blockHash = this.getBlock(i).hash;
-        let previousHash = this.getBlock(i+1).previousBlockHash;
+        let blockHash = (await this.getBlock(i)).hash;
+        let previousHash = (await this.getBlock(i+1)).previousBlockHash;
         if (blockHash !== previousHash) {
           errorLog.push(i);
         }
