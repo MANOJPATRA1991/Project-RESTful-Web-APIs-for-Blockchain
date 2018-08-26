@@ -1,57 +1,6 @@
-const level = require('level');
+const LevelSandbox = require('./levelSandbox');
+const Block = require('./block');
 const SHA256 = require('crypto-js/sha256');
-const chainDB = './chaindata';
-
-class LevelSandbox {
-  constructor() {
-    this.db = level(chainDB);
-  }
-  
-  getAllBlockHash() {
-  	let self = this;
-    let i = -1;
-    return new Promise(function(resolve, reject) {
-      self.db.createKeyStream()
-      .on('data', function(data) {
-        i++;
-      })
-      .on('error', function(err) {
-        reject(err);
-      })
-      .on('close', function() {
-        resolve(i);
-      });
-    });
-  }
-
-  async addLevelDBData(key, value) {
-    try {
-      await this.db.put(key, value);
-    } catch(err) {
-      console.log('Block ' + key + ' submission failed', err);
-    }
-  }
-
-  async getLevelDBData(key) {
-    try {
-      let val = await this.db.get(key);
-      console.log(val);
-      return val;
-    } catch(err) {
-      console.log('Not found!', err);
-    }
-  }
-}
-
-class Block{
-	constructor(data) {
-    this.hash = "";
-    this.height = 0;
-    this.body = data;
-    this.time = 0;
-    this.previousBlockHash = "";
-  }
-}
 
 class Blockchain{
   constructor(){
@@ -131,15 +80,17 @@ class Blockchain{
     async validateChain(){
       let errorLog = [];
       let height = await this.getBlockHeight();
-      for (let i = 0; i < height; i++) {
+      for (let i = 0; i <= height; i++) {
         console.log("Block is: ", await this.getBlock(i));
         // validate block
         if (!(await this.validateBlock(i))) errorLog.push(i);
         // compare blocks hash link
-        let blockHash = (await this.getBlock(i)).hash;
-        let previousHash = (await this.getBlock(i+1)).previousBlockHash;
-        if (blockHash !== previousHash) {
-          errorLog.push(i);
+        if (i+1 <= height) {
+          let blockHash = (await this.getBlock(i)).hash;
+          let previousHash = (await this.getBlock(i+1)).previousBlockHash;
+          if (blockHash !== previousHash) {
+            errorLog.push(i);
+          }
         }
       }
       if (errorLog.length > 0) {
