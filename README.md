@@ -65,7 +65,7 @@
 **Request-Body**:
 ```
 {
-	  "body": "Test block in blockchain"
+    "body": "Test block in blockchain"
 }
 ```
 
