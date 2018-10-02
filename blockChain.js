@@ -1,10 +1,9 @@
-const LevelSandbox = require('./levelSandbox');
 const Block = require('./block');
 const SHA256 = require('crypto-js/sha256');
 
 class Blockchain{
-  constructor(){
-    this.chain = new LevelSandbox();
+  constructor(chain){
+    this.chain = chain;
     this.checkHeightOfChain();
   }
 
@@ -101,3 +100,5 @@ class Blockchain{
       }
     }
 }
+
+module.exports = Blockchain;

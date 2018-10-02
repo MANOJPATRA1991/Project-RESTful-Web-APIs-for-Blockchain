@@ -1,5 +1,6 @@
 const level = require('level');
-const chainDB = './chaindata';
+// Refer to chaindata
+const chainDB = '../chaindata';
 
 class LevelSandbox {
   constructor() {
@@ -26,8 +27,9 @@ class LevelSandbox {
   async addLevelDBData(key, value) {
     try {
       await this.db.put(key, value);
+      return this.db.get(key);
     } catch(err) {
-      console.log('Block ' + key + ' submission failed', err);
+      throw TypeError('Block ' + key + ' submission failed', err);
     }
   }
 
