@@ -5,7 +5,6 @@ const path = require('path');
 
 // Import routers
 const BlockRouter = require('./routes/blockRouter');
-const ChainRouter = require('./routes/chainRouter');
 
 // view engine setup
 app.set('views', path.join(__dirname, 'views'));
@@ -15,7 +14,6 @@ app.use(bodyParser.json()); // for parsing application/json
 app.use(bodyParser.urlencoded({ extended: true })); // for parsing application/x-www-form-urlencoded
 
 app.use('/block', BlockRouter);
-app.use('/chain', ChainRouter);
 
 app.use(function(req, res, next) {
     res.header("Access-Control-Allow-Origin", "*");
